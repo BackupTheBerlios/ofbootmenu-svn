@@ -139,7 +139,7 @@ max-options array cmd
    #options 1- to selected ;
 
 \ Uncomment the following line to test under gforth
-\ include bootmenu.conf bootmenu
+include bootmenu.conf bootmenu
 
 \ Dirty hack, can't find a simpler way to INCLUDE in SmartFirmware
 : 0count ( addr -- addr len )
