@@ -1,7 +1,7 @@
-Bootmenu for Pegasos
-====================
+OFBootMenu
+==========
 
-Bootmenu is a boot selector for the Pegasos platform written in
+OFBootMenu is a boot selector for the Pegasos platform written in
 Forth. A simple configuration file specifies the set of operating
 system choices and the commands used to boot each one.
 

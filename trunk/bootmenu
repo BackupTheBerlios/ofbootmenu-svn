@@ -1,6 +1,4 @@
-\ $Id: bootmenu,v 1.10 2005/02/02 00:55:13 jacereda Exp jacereda $
-\
-\ Boot selector menu
+\ $Id$
 \
 \ Copyright (c) 2005 Jorge Acereda Macia <jacereda@users.sourceforge.net>
 \ 
@@ -94,10 +92,12 @@ max-options array cmd
    1 +option ;
 : under+ ( n1 nd x -- n3 x )
    rot + swap ;
-: version ( -- addr len )
-   s" $Revision: 1.10 $" 11 under+ 13 - ;
+: date ( -- addr len )
+   s" $Date$" 7 /string drop 10 ;
+: revision ( -- addr len )
+   s" $Rev$" 6 /string 1- ;
 : .copyright ( -- )
-   ." Pegasos boot selector " version type cr
+   ." OFBootMenu Rev. " revision type ." - " date type cr
    ." (c) 2005 Jorge Acereda Macia <jacereda@users.sourceforge.net>" cr ;
 : same? ( -- flag, true if selected option didn't change)
    selected oselected =   seconds oseconds = and
