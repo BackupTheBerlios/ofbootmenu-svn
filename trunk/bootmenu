@@ -24,8 +24,14 @@
 
 forth
 
-\ Detect if we are under gforth, SmartFirmware starts in HEX
+\ Detect if we are in gforth, SmartFirmware starts in HEX
 base @ decimal 10 = constant gforth?
+: hacks
+   gforth? if
+      s" create load-base 8192 allot" evaluate
+      s" 0 value lines/page" evaluate 
+      s" : $load included ;" evaluate
+   then ;  hacks
 
 32 constant max-options
 
@@ -72,7 +78,7 @@ max-options array cmd
 : expired? ( index -- flag, is this an expired index?)
    timeout? remaining 0< and ;
 : seconds ( -- n, remaining seconds)
-   remaining 9 + 10 / ;
+   remaining 99 + 100 / ;
 : .label ( index -- , print label)
    dup expired? if cr drop exit then
    dup selected = if white ." >> " else ."    " then  
@@ -95,26 +101,30 @@ max-options array cmd
    1 +option ;
 : under+ ( n1 nd x -- n3 x )
    rot + swap ;
+: /string  ( c-addr1 u1 n -- c-addr2 u2 )
+   >r r@ under+ r> - ;
 : date ( -- addr len )
-   s" $Date$" 7 /string drop 10 ;
+   s" $Date$" 
+   7 /string drop 10 ;
 : revision ( -- addr len )
    s" $Rev$" 6 /string 1- ;
 : .copyright ( -- )
    ." OFBootMenu Rev. " revision type ." - " date type cr
    ." (c) 2005 Jorge Acereda Macia <jacereda@users.sourceforge.net>" cr ;
-: same? ( -- flag, true if selected option didn't change)
-   selected oselected =   seconds oseconds = and
+: changed? ( -- flag, true if display needs redraw)
+   selected oselected =   seconds oseconds =  and 0=
    selected to oselected  seconds to oseconds ;
 : draw ( -- , draw screen)
-   page  .copyright cr  .labels cr  ;
+   page  .copyright cr  .labels cr ;
 : timedkey ( -- key )
-   100 ms  key? if -1 to remaining  key exit then
+   10 ms  key? if -1 to remaining  key exit then
    remaining 0= if 13 exit then
    remaining dup 0 > + to remaining  0 ;
 : run ( -- , handle keypress)
    timedkey case 
       [char] 8 of up endof
       [char] 2 of down endof
+      10 of select endof
       13 of select endof
       14 of down endof
       16 of up endof
@@ -122,7 +132,7 @@ max-options array cmd
    endcase ;
 
 : (timeout)
-   bl parse evaluate 10 * to remaining ;
+   bl parse evaluate 100 * to remaining ;
 
 \ User commands
 : print ( <string><eol> -- , set label for entry)
@@ -132,8 +142,9 @@ max-options array cmd
 : exitmenu ( -- )
    ." Type 'bootmenu' to return" cr quit ;
 : bootmenu ( -- )
+   10000 to lines/page \ Avoid the fucking "more?" requester
    -1 to oselected \ force redraw if returning from OF
-   begin  same? if run else draw then  again ;
+   begin  run  changed? if draw then  again ;
 : timeout ( <seconds> <string> -- , set timeout value)
    (timeout) print  #options 1- to ttimeout ;
 : bartimeout ( <seconds> string -- , set timeout value for bar)
@@ -141,9 +152,6 @@ max-options array cmd
 : default
    #options 1- to selected ;
 
-gforth? [if]
-include bootmenu.conf bootmenu
-[else]
 \ Dirty hack, can't find a simpler way to INCLUDE in SmartFirmware
 : 0count ( addr -- addr len )
    dup begin dup c@ while 1+ repeat over - ;
@@ -151,7 +159,7 @@ include bootmenu.conf bootmenu
    load-base 8192 erase   $load   load-base 0count evaluate ;
 
 \ Load config file
-s" bootmenu.conf" hackish-included
-[then]
+: loadit s" bootmenu.conf" hackish-included ; loadit
+
 \ Go
 bootmenu
