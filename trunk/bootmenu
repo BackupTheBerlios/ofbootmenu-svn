@@ -22,7 +22,10 @@
 \ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-forth  decimal
+forth
+
+\ Detect if we are under gforth, SmartFirmware starts in HEX
+base @ decimal 10 = constant gforth?
 
 32 constant max-options
 
@@ -138,18 +141,17 @@ max-options array cmd
 : default
    #options 1- to selected ;
 
-\ Uncomment the following line to test under gforth
+gforth? [if]
 include bootmenu.conf bootmenu
-
+[else]
 \ Dirty hack, can't find a simpler way to INCLUDE in SmartFirmware
 : 0count ( addr -- addr len )
    dup begin dup c@ while 1+ repeat over - ;
 : hackish-included ( addr len -- )
    load-base 8192 erase   $load   load-base 0count evaluate ;
 
-
 \ Load config file
 s" bootmenu.conf" hackish-included
-
+[then]
 \ Go
 bootmenu
